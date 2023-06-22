@@ -16,7 +16,7 @@ jobs:
         registry-url: 'https://registry.npmjs.org'
         # Defaults to the user or organization that owns the workflow file
         scope: '@tap_team'
-    - run: npm i -G pnpm
+    - run: npm i -G --legacy-peer-deps pnpm
     - run: pnpm add @vkontakte/vk-bridge --peer
     - run: pnpm run lint-check && yarn run test
     - run: pnpm version ${{ github.event.Inputs.version }} --allow-same-version
