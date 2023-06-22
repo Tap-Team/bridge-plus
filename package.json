@@ -1,20 +1,20 @@
 {
   "name": "@tap_team/bridge-plus",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "license": "MIT",
-  "author": "happysanta",
+  "author": "tap_team",
   "scripts": {
     "build": "tsc && ./node_modules/.bin/babel src --out-dir dist --extensions '.ts,.tsx'",
     "test": "jest",
     "lint": "eslint --fix --ext .ts,.tsx src",
     "lint-check": "eslint --ext .ts,.tsx src",
-    "prepublish": "yarn run build",
-    "pub": "yarn run lint-check && yarn run test && yarn version --patch && yarn publish --new-version $(node -p -e \"require('./package.json').version\")",
+    "prepublish": "npm run build",
+    "pub": "npm run lint-check && npm run test && npm version --patch && npm publish --new-version $(node -p -e \"require('./package.json').version\")",
     "fix-for-link": "rm -rf node_modules/react node_modules/react-dom",
-    "fix-for-test": "rm -rf node_modules && rm package-lock.json  && yarn install",
-    "docs": "./node_modules/.bin/typedoc --externalPattern 'src/index.ts' --exclude **/*.spec.ts* --excludeExternals --excludeNotExported --out docs src/"
+    "fix-for-test": "rm -rf node_modules && rm package-lock.json  && npm install",
+    "docs": "typedoc --externalPattern 'src/index.ts' --exclude **/*.spec.ts* --excludeExternals --excludeNotExported --out docs src/"
   },
   "devDependencies": {
     "@babel/cli": "^7.22.5",
@@ -65,5 +65,14 @@
   },
   "peerDependencies": {
     "@vkontakte/vk-bridge": "^2.8.1"
-  }
+  },
+  "description": "Набор инструментов для упрощения взаимодействия с vk-bridge.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tap-Team/bridge-plus.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Tap-Team/bridge-plus/issues"
+  },
+  "homepage": "https://github.com/Tap-Team/bridge-plus#readme"
 }
