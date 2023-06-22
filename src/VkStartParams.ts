@@ -57,6 +57,7 @@ export class VkStartParams {
    */
   hasTokenSettings(scope: string | string[]) {
     if (Array.isArray(scope)) {
+      // eslint-disable-next-line no-shadow
       return !scope.some((scope) => !this._hasTokenSettingsScope(scope));
     }
     return this._hasTokenSettingsScope(scope);
@@ -81,10 +82,12 @@ export class VkStartParams {
    * @return {boolean}
    */
   isMobileApp() {
-    return this.getValue('vk_platform') === VkStartParams.MOBILE_ANDROID
-      || this.getValue('vk_platform') === VkStartParams.MOBILE_IPHONE
-      || this.getValue('vk_platform') === VkStartParams.MOBILE_ANDROID_MESSENGER
-      || this.getValue('vk_platform') === VkStartParams.MOBILE_IPHONE_MESSENGER;
+    return (
+      this.getValue('vk_platform') === VkStartParams.MOBILE_ANDROID ||
+      this.getValue('vk_platform') === VkStartParams.MOBILE_IPHONE ||
+      this.getValue('vk_platform') === VkStartParams.MOBILE_ANDROID_MESSENGER ||
+      this.getValue('vk_platform') === VkStartParams.MOBILE_IPHONE_MESSENGER
+    );
   }
 
   /**
@@ -99,8 +102,10 @@ export class VkStartParams {
    * @return {boolean}
    */
   isMobileAppVkOnly() {
-    return this.getValue('vk_platform') === VkStartParams.MOBILE_ANDROID
-      || this.getValue('vk_platform') === VkStartParams.MOBILE_IPHONE;
+    return (
+      this.getValue('vk_platform') === VkStartParams.MOBILE_ANDROID ||
+      this.getValue('vk_platform') === VkStartParams.MOBILE_IPHONE
+    );
   }
 
   isGroupAdmin() {
@@ -129,7 +134,12 @@ export class VkStartParams {
    * @return {boolean}
    */
   isGroupMemberOrAdmin() {
-    return this.isGroupMember() || this.isGroupAdmin() || this.isGroupEditor() || this.isGroupModerator();
+    return (
+      this.isGroupMember() ||
+      this.isGroupAdmin() ||
+      this.isGroupEditor() ||
+      this.isGroupModerator()
+    );
   }
 
   /**
@@ -137,11 +147,16 @@ export class VkStartParams {
    * @return {boolean}
    */
   isGroupAnyAdmin() {
-    return this.isGroupAdmin() || this.isGroupEditor() || this.isGroupModerator();
+    return (
+      this.isGroupAdmin() || this.isGroupEditor() || this.isGroupModerator()
+    );
   }
 
   notInGroup() {
-    return this.getStrValue('vk_viewer_group_role') === VkStartParams.NONE || !this.hasValue('vk_viewer_group_role');
+    return (
+      this.getStrValue('vk_viewer_group_role') === VkStartParams.NONE ||
+      !this.hasValue('vk_viewer_group_role')
+    );
   }
 
   /**
@@ -303,23 +318,38 @@ export class VkStartParams {
    */
 
   isAdmin() {
-    return this.isInGroup() && this.viewerGroupRole === VkStartParams.VIEWER_GROUP_ROLE_ADMIN;
+    return (
+      this.isInGroup() &&
+      this.viewerGroupRole === VkStartParams.VIEWER_GROUP_ROLE_ADMIN
+    );
   }
 
   isModerator() {
-    return this.isInGroup() && this.viewerGroupRole === VkStartParams.VIEWER_GROUP_ROLE_MODERATOR;
+    return (
+      this.isInGroup() &&
+      this.viewerGroupRole === VkStartParams.VIEWER_GROUP_ROLE_MODERATOR
+    );
   }
 
   isEditor() {
-    return this.isInGroup() && this.viewerGroupRole === VkStartParams.VIEWER_GROUP_ROLE_EDITOR;
+    return (
+      this.isInGroup() &&
+      this.viewerGroupRole === VkStartParams.VIEWER_GROUP_ROLE_EDITOR
+    );
   }
 
   isMember() {
-    return this.isInGroup() && this.viewerGroupRole === VkStartParams.VIEWER_GROUP_ROLE_MEMBER;
+    return (
+      this.isInGroup() &&
+      this.viewerGroupRole === VkStartParams.VIEWER_GROUP_ROLE_MEMBER
+    );
   }
 
   isNobody() {
-    return this.isInGroup() && this.viewerGroupRole === VkStartParams.VIEWER_GROUP_ROLE_NOBODY;
+    return (
+      this.isInGroup() &&
+      this.viewerGroupRole === VkStartParams.VIEWER_GROUP_ROLE_NOBODY
+    );
   }
 
   isMobile() {
@@ -336,4 +366,3 @@ export class VkStartParams {
     return this.language;
   }
 }
-

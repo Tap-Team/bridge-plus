@@ -1,4 +1,4 @@
-import * as qs from 'query-string';
+import qs from 'query-string';
 import { VkStartParams } from './VkStartParams';
 import VkObserver from './VkObserver';
 import {
@@ -25,7 +25,10 @@ import {
 import { Queue } from './Queue';
 import { getContextId, normalizeScope } from './helpers';
 import { defaultAccessTokenFetcher } from './AccessTokenFetcher';
-import { exponentialBackoffAnyError, exponentialBackoffForApi } from './backoff';
+import {
+  exponentialBackoffAnyError,
+  exponentialBackoffForApi,
+} from './backoff';
 import { VkError, VkErrorTypes } from './VkError';
 import { VK_API_AUTH_FAIL } from './const';
 import { AnyEventName, BridgePlusEventCallback } from './extendedTypes';
@@ -34,7 +37,8 @@ import { ApiCallConfig, defaultApiCallConfig } from './ApiCallConfig';
 import { BridgeApiParams } from './ApiParams';
 import { BridgeApiScope, isBridgeApiScope } from './BridgeApiScope';
 
-type ApiParams = Record<'access_token' | 'v', string> & Record<string, string | number>;
+type ApiParams = Record<'access_token' | 'v', string> &
+Record<string, string | number>;
 
 function isApiParams(x: Record<string, string | number>): x is ApiParams {
   return !!x.v && !!x.access_token;
@@ -53,7 +57,9 @@ export class BridgePlus {
    */
   static getStartParams(): VkStartParams {
     if (BridgePlus.startParams === null) {
-      BridgePlus.startParams = new VkStartParams(qs.parse(window.location.search));
+      BridgePlus.startParams = new VkStartParams(
+        qs.parse(window.location.search),
+      );
       BridgePlus.startSearch = window.location.search;
     }
     return BridgePlus.startParams;
@@ -62,14 +68,20 @@ export class BridgePlus {
   /**
    * Подписаться на событие VkBridge
    */
-  static subscribe<T extends AnyEventName>(eventType: T, callback: BridgePlusEventCallback<T>) {
+  static subscribe<T extends AnyEventName>(
+    eventType: T,
+    callback: BridgePlusEventCallback<T>,
+  ) {
     VkObserver.subscribe(eventType, callback);
   }
 
   /**
    * Отписаться от события VkBridge
    */
-  static unsubscribe<T extends AnyEventName>(eventType: T, callback: BridgePlusEventCallback<T>) {
+  static unsubscribe<T extends AnyEventName>(
+    eventType: T,
+    callback: BridgePlusEventCallback<T>,
+  ) {
     VkObserver.unsubscribe(eventType, callback);
   }
 
@@ -98,14 +110,22 @@ export class BridgePlus {
    */
   static getUserInfo() {
     const contextId = getContextId();
-    return exponentialBackoffAnyError(() => BridgePlus.send('VKWebAppGetUserInfo', {}, contextId), (e) => {
-      if (BridgePlus.defaultApiCallConfig.retryStrategy === 'default') {
-        BridgePlus.log(`[${contextId}] VKWebAppGetUserInfo retrying`, e.message, e.code, e.type);
-        return false;
-      } else {
-        return true;
-      }
-    });
+    return exponentialBackoffAnyError(
+      () => BridgePlus.send('VKWebAppGetUserInfo', {}, contextId),
+      (e) => {
+        if (BridgePlus.defaultApiCallConfig.retryStrategy === 'default') {
+          BridgePlus.log(
+            `[${contextId}] VKWebAppGetUserInfo retrying`,
+            e.message,
+            e.code,
+            e.type,
+          );
+          return false;
+        } else {
+          return true;
+        }
+      },
+    );
   }
 
   /**
@@ -165,7 +185,13 @@ export class BridgePlus {
       app_id: appId || this.getStartParams().appId,
       scope: scope,
     };
-    return BridgePlus.getRequestTokenQueue().call(() => BridgePlus.send<'VKWebAppGetAuthToken'>('VKWebAppGetAuthToken', params, requestId));
+    return BridgePlus.getRequestTokenQueue().call(() =>
+      BridgePlus.send<'VKWebAppGetAuthToken'>(
+        'VKWebAppGetAuthToken',
+        params,
+        requestId,
+      ),
+    );
   }
 
   static getRequestTokenQueue(): Queue {
@@ -187,14 +213,25 @@ export class BridgePlus {
    * @param requestId id запроса для логов
    * @returns {Promise}
    */
-  static async callAPIMethod(method: string, params: Record<string, string | number> = {}, requestId?: string) {
+  static async callAPIMethod(
+    method: string,
+    params: Record<string, string | number> = {},
+    requestId?: string,
+  ) {
     if (params.v === undefined) {
       params.v = BridgePlus.defaultApiVersion;
     }
     if (isApiParams(params)) {
-      return await BridgePlus.send<'VKWebAppCallAPIMethod'>('VKWebAppCallAPIMethod', { method, params }, requestId);
+      return await BridgePlus.send<'VKWebAppCallAPIMethod'>(
+        'VKWebAppCallAPIMethod',
+        { method, params },
+        requestId,
+      );
     } else {
-      throw new VkError('API ERROR: #5 no access_token or version (v) passed', VkErrorTypes.API_ERROR);
+      throw new VkError(
+        'API ERROR: #5 no access_token or version (v) passed',
+        VkErrorTypes.API_ERROR,
+      );
     }
   }
 
@@ -207,7 +244,11 @@ export class BridgePlus {
    * @throws BridgePlusError
    * @returns {Promise<Object>}
    */
-  static async api<T extends { response: any }>(method: string, params: BridgeApiParams = {}, scope?: BridgeApiScope | Partial<ApiCallConfig>): Promise<T> {
+  static async api<T extends { response: any }>(
+    method: string,
+    params: BridgeApiParams = {},
+    scope?: BridgeApiScope | Partial<ApiCallConfig>,
+  ): Promise<T> {
     let callConfig = { ...BridgePlus.defaultApiCallConfig };
     if (typeof scope === 'object' && scope !== null) {
       callConfig = { ...callConfig, ...scope };
@@ -222,42 +263,61 @@ export class BridgePlus {
     const appId = BridgePlus.getStartParams().appId;
     const normalizedScope = normalizeScope(callConfig.scope);
     let lastFetchedToken = '';
-    return await exponentialBackoffForApi<T>(async () => {
-      BridgePlus.log(`[${requestId}] api ${method} start call`, params);
-      if (needAccessToken) {
-        lastFetchedToken = await defaultAccessTokenFetcher.fetch(normalizedScope, appId, requestId, callConfig.retryStrategy);
-        p.access_token = lastFetchedToken;
-      }
-      return await BridgePlus.callAPIMethod(method, p, requestId) as T;
-    }, (e: any) => {
-      if (callConfig.retryStrategy === 'none') {
-        return false;
-      }
-      BridgePlus.log(`[${requestId}] api ${method} failed`, e.message, e.code, e.type);
-
-      // Ошибка о том что токен протух, такое бывает когда у пользователя меняется ip
-      if (e instanceof VkError && e.code === VK_API_AUTH_FAIL) {
-        // Если мы сами запрашивали токен, то удалим его при следующем вызове к апи
-        // он создастся снова
+    return await exponentialBackoffForApi<T>(
+      async () => {
+        BridgePlus.log(`[${requestId}] api ${method} start call`, params);
         if (needAccessToken) {
-          defaultAccessTokenFetcher.drop(lastFetchedToken);
-          return true;
-        } else {
-          // Если токен пришел из параметров вызова
-          // то выкидываем ошибку во вне
+          lastFetchedToken = await defaultAccessTokenFetcher.fetch(
+            normalizedScope,
+            appId,
+            requestId,
+            callConfig.retryStrategy,
+          );
+          p.access_token = lastFetchedToken;
+        }
+        return (await BridgePlus.callAPIMethod(method, p, requestId)) as T;
+      },
+      (e: any) => {
+        if (callConfig.retryStrategy === 'none') {
           return false;
         }
-      }
-      if (callConfig.retryStrategy === 'token-only') {
-        return false;
-      }
-      return undefined;
-    })
+        BridgePlus.log(
+          `[${requestId}] api ${method} failed`,
+          e.message,
+          e.code,
+          e.type,
+        );
+
+        // Ошибка о том что токен протух, такое бывает когда у пользователя меняется ip
+        if (e instanceof VkError && e.code === VK_API_AUTH_FAIL) {
+          // Если мы сами запрашивали токен, то удалим его при следующем вызове к апи
+          // он создастся снова
+          if (needAccessToken) {
+            defaultAccessTokenFetcher.drop(lastFetchedToken);
+            return true;
+          } else {
+            // Если токен пришел из параметров вызова
+            // то выкидываем ошибку во вне
+            return false;
+          }
+        }
+        if (callConfig.retryStrategy === 'token-only') {
+          return false;
+        }
+        return undefined;
+      },
+    )
       .then((res) => {
         BridgePlus.log(`[${requestId}] api ${method} done`);
         return res;
-      }).catch((e) => {
-        BridgePlus.log(`[${requestId}] api ${method} reject`, e.message, e.code, e.type);
+      })
+      .catch((e) => {
+        BridgePlus.log(
+          `[${requestId}] api ${method} reject`,
+          e.message,
+          e.code,
+          e.type,
+        );
         throw e;
       });
   }
@@ -287,6 +347,7 @@ export class BridgePlus {
    * @param {number} start_index
    * @return {Promise}
    */
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   static showImages(images: string[], start_index = 0) {
     return BridgePlus.send('VKWebAppShowImages', { images, start_index });
   }
@@ -308,7 +369,11 @@ export class BridgePlus {
    * Платёж VK Pay
    * Поднимает экран VK Pay для платежа
    */
-  static openPayForm<ActionType extends VKPayActionType>(action: ActionType, params: VKPayActionParamsMap[ActionType], appId = null) {
+  static openPayForm<ActionType extends VKPayActionType>(
+    action: ActionType,
+    params: VKPayActionParamsMap[ActionType],
+    appId = null,
+  ) {
     return BridgePlus.send('VKWebAppOpenPayForm', {
       app_id: appId || BridgePlus.getStartParams().appId,
       action,
@@ -384,7 +449,10 @@ export class BridgePlus {
    * @returns {Promise}
    */
   static allowMessagesFromGroup(groupId: number, key: string) {
-    return BridgePlus.send('VKWebAppAllowMessagesFromGroup', { group_id: groupId, key });
+    return BridgePlus.send('VKWebAppAllowMessagesFromGroup', {
+      group_id: groupId,
+      key,
+    });
   }
 
   /**
@@ -393,7 +461,11 @@ export class BridgePlus {
    * @param {number|null} groupId
    * @param {number|null} appId
    */
-  static getCommunityAuthToken(scope = 'messages', groupId = null, appId = null) {
+  static getCommunityAuthToken(
+    scope = 'messages',
+    groupId = null,
+    appId = null,
+  ) {
     return BridgePlus.send('VKWebAppGetCommunityToken', {
       scope,
       app_id: appId || BridgePlus.getStartParams().appId,
@@ -421,9 +493,15 @@ export class BridgePlus {
    * @throws BridgePlusError
    * @return {Promise<{result:boolean}>}
    */
-  static showCommunityWidgetPreviewBox(type: CommunityWidgetType, code: string, groupId = null) {
+  static showCommunityWidgetPreviewBox(
+    type: CommunityWidgetType,
+    code: string,
+    groupId = null,
+  ) {
     return BridgePlus.send('VKWebAppShowCommunityWidgetPreviewBox', {
-      type, code, group_id: groupId || BridgePlus.getStartParams().groupId,
+      type,
+      code,
+      group_id: groupId || BridgePlus.getStartParams().groupId,
     });
   }
 
@@ -508,8 +586,17 @@ export class BridgePlus {
    * Параметр работает только на Android
    * @returns {Promise}
    */
-  static setViewSettings(statusBarStyle: AppearanceType, actionBarColor?: string, navigation_bar_color?: string) {
-    let params: { status_bar_style: AppearanceType; action_bar_color?: string | undefined; navigation_bar_color?: string | undefined } = { status_bar_style: statusBarStyle };
+  static setViewSettings(
+    statusBarStyle: AppearanceType,
+    actionBarColor?: string,
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    navigation_bar_color?: string,
+  ) {
+    let params: {
+      status_bar_style: AppearanceType;
+      action_bar_color?: string | undefined;
+      navigation_bar_color?: string | undefined;
+    } = { status_bar_style: statusBarStyle };
     if (actionBarColor) {
       params.action_bar_color = actionBarColor;
     }
@@ -525,9 +612,18 @@ export class BridgePlus {
     return VkBridge.supports('VKWebAppSetViewSettings');
   }
 
-  static setViewSettingsIf(statusBarStyle: AppearanceType, actionBarColor?: string, navigation_bar_color?: string) {
+  static setViewSettingsIf(
+    statusBarStyle: AppearanceType,
+    actionBarColor?: string,
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    navigation_bar_color?: string,
+  ) {
     if (BridgePlus.supportSetViewSettings()) {
-      return BridgePlus.setViewSettings(statusBarStyle, actionBarColor, navigation_bar_color);
+      return BridgePlus.setViewSettings(
+        statusBarStyle,
+        actionBarColor,
+        navigation_bar_color,
+      );
     } else {
       return Promise.resolve();
     }
@@ -593,14 +689,17 @@ export class BridgePlus {
    * @return {Promise<{keys:{key:string,value:string}[]}>}
    */
   static storageGet(keys: string[]) {
-    return exponentialBackoffAnyError(() => BridgePlus.send('VKWebAppStorageGet', { keys }), (e) => {
-      if (BridgePlus.defaultApiCallConfig.retryStrategy === 'default') {
-        BridgePlus.log('VKWebAppStorageGetFailed retrying', e);
-        return false;
-      } else {
-        return true;
-      }
-    });
+    return exponentialBackoffAnyError(
+      () => BridgePlus.send('VKWebAppStorageGet', { keys }),
+      (e) => {
+        if (BridgePlus.defaultApiCallConfig.retryStrategy === 'default') {
+          BridgePlus.log('VKWebAppStorageGetFailed retrying', e);
+          return false;
+        } else {
+          return true;
+        }
+      },
+    );
   }
 
   /**
@@ -610,14 +709,17 @@ export class BridgePlus {
    * @return {Promise<{result:boolean}>}
    */
   static storageSet(key: string, value: string) {
-    return exponentialBackoffAnyError(() => BridgePlus.send('VKWebAppStorageSet', { key, value }), (e) => {
-      if (BridgePlus.defaultApiCallConfig.retryStrategy === 'default') {
-        BridgePlus.log('VKWebAppStorageSetFailed retrying', e);
-        return false;
-      } else {
-        return true;
-      }
-    });
+    return exponentialBackoffAnyError(
+      () => BridgePlus.send('VKWebAppStorageSet', { key, value }),
+      (e) => {
+        if (BridgePlus.defaultApiCallConfig.retryStrategy === 'default') {
+          BridgePlus.log('VKWebAppStorageSetFailed retrying', e);
+          return false;
+        } else {
+          return true;
+        }
+      },
+    );
   }
 
   /**
@@ -626,14 +728,17 @@ export class BridgePlus {
    * @param {number} offset
    */
   static storageGetKeys(count = 20, offset = 0) {
-    return exponentialBackoffAnyError(() => BridgePlus.send('VKWebAppStorageGetKeys', { count, offset }), (e) => {
-      if (BridgePlus.defaultApiCallConfig.retryStrategy === 'default') {
-        BridgePlus.log('VKWebAppStorageGetKeysFailed retrying', e);
-        return false;
-      } else {
-        return true;
-      }
-    });
+    return exponentialBackoffAnyError(
+      () => BridgePlus.send('VKWebAppStorageGetKeys', { count, offset }),
+      (e) => {
+        if (BridgePlus.defaultApiCallConfig.retryStrategy === 'default') {
+          BridgePlus.log('VKWebAppStorageGetKeysFailed retrying', e);
+          return false;
+        } else {
+          return true;
+        }
+      },
+    );
   }
 
   /**
@@ -676,7 +781,11 @@ export class BridgePlus {
    * @return {Promise}
    */
   // eslint-disable-next-line max-len
-  static send<K extends AnyRequestMethodName>(method: K, props?: RequestProps<K> & RequestIdProp, contextId?: string): Promise<K extends AnyReceiveMethodName ? ReceiveData<K> : void> {
+  static send<K extends AnyRequestMethodName>(
+    method: K,
+    props?: RequestProps<K> & RequestIdProp,
+    contextId?: string,
+  ): Promise<K extends AnyReceiveMethodName ? ReceiveData<K> : void> {
     const requestId = contextId || getContextId();
     BridgePlus.log(`[${requestId}] ${method} start`, props);
     defaultStat.begin(method, props, requestId);
@@ -690,9 +799,17 @@ export class BridgePlus {
       .catch((e) => {
         const err = castToError(e, method);
         if (!e.stack && err.stack && saveStack.stack) {
-          err.stack += `\n${saveStack.stack.substr(saveStack.stack.indexOf('\n') + 1)}`;
+          err.stack += `\n${saveStack.stack.substr(
+            saveStack.stack.indexOf('\n') + 1,
+          )}`;
         }
-        BridgePlus.log(`[${requestId}] ${method} failed`, props, err.message, err.code, err.type);
+        BridgePlus.log(
+          `[${requestId}] ${method} failed`,
+          props,
+          err.message,
+          err.code,
+          err.type,
+        );
         defaultStat.end(method, props, requestId, false);
         throw err;
       });
@@ -703,7 +820,9 @@ export class BridgePlus {
    * @param {object} params
    * @return {Promise}
    */
-  static showStoryBox(params: RequestProps<'VKWebAppShowStoryBox'> & RequestIdProp) {
+  static showStoryBox(
+    params: RequestProps<'VKWebAppShowStoryBox'> & RequestIdProp,
+  ) {
     return BridgePlus.send('VKWebAppShowStoryBox', params);
   }
 
@@ -714,11 +833,15 @@ export class BridgePlus {
     return VkBridge.supports('VKWebAppShowStoryBox');
   }
 
-  static tapticImpactOccurred(params: { style: TapticVibrationPowerType } = { 'style': 'light' }) {
+  static tapticImpactOccurred(
+    params: { style: TapticVibrationPowerType } = { style: 'light' },
+  ) {
     return BridgePlus.send('VKWebAppTapticImpactOccurred', params);
   }
 
-  static tapticNotificationOccurred(params: { type: TapticNotificationType } = { 'type': 'success' }) {
+  static tapticNotificationOccurred(
+    params: { type: TapticNotificationType } = { type: 'success' },
+  ) {
     return BridgePlus.send('VKWebAppTapticNotificationOccurred', params);
   }
 

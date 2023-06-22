@@ -43,6 +43,7 @@
       {
         "ignoreRestSiblings": true
       }
-    ]
+    ],
+    "quotes": ["error", "single"]
   }
 }

@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-shadow
 export enum VkErrorTypes {
   UNKNOWN_TYPE = 'UNKNOWN_TYPE',
   CLIENT_ERROR = 'client_error',

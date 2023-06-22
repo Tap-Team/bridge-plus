@@ -1,21 +1,24 @@
 name: Node.js Package
 on:
-  release:
-    types: [created]
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     # Setup .npmrc file to publish to npm
-    - uses: actions/setup-node@v1
+    - uses: actions/setup-node@v3
       with:
-        node-version: '12.x'
+        node-version: '16.x'
         registry-url: 'https://registry.npmjs.org'
         # Defaults to the user or organization that owns the workflow file
-        scope: '@happysanta'
-    - run: yarn add @vkontakte/vk-bridge --peer
-    - run: yarn run lint-check && yarn run test
-    - run: yarn publish --no-git-tag-version --access public --new-version $(git describe --tags)
+        scope: '@tap_team'
+    - run: npm i -G pnpm
+    - run: pnpm add @vkontakte/vk-bridge --peer
+    - run: pnpm run lint-check && yarn run test
+    - run: pnpm version ${{ github.event.Inputs.version }} --allow-same-version
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
