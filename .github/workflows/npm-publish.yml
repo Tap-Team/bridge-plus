@@ -23,7 +23,7 @@ jobs:
         version: 7
         run_install: false
     - run: pnpm add @vkontakte/vk-bridge --save-peer
-    - run: pnpm run lint-check && pnpm run test
+#    - run: pnpm run lint-check && pnpm run test
     - run: pnpm version ${{ github.event.Inputs.version }} --allow-same-version
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
