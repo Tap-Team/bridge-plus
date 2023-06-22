@@ -22,7 +22,7 @@ jobs:
       with:
         version: 7
         run_install: false
-    - run: pnpm add @vkontakte/vk-bridge --peer
+    - run: pnpm add @vkontakte/vk-bridge --save-peer
     - run: pnpm run lint-check && yarn run test
     - run: pnpm version ${{ github.event.Inputs.version }} --allow-same-version
       env:
